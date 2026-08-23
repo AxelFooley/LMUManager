@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>LMUManager</AssemblyName>
+    <RootNamespace>LMUManager</RootNamespace>
+    <Version>1.0.0</Version>
+    <Authors>LMUManager contributors</Authors>
+    <Product>LMU Manager</Product>
+    <Description>One-click launcher for Le Mans Ultimate companion apps. Starts your tools with the game and closes them when you finish.</Description>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="LMUManager.Tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="LMUManager.Tests" />
+  </ItemGroup>
+
+</Project>

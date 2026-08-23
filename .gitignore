@@ -1,0 +1,24 @@
+## .NET
+bin/
+obj/
+publish/
+*.user
+TestResults/
+*.trx
+
+## IDE
+.vs/
+.vscode/
+.idea/
+*.swp
+
+## OS
+Thumbs.db
+Desktop.ini
+
+## Secrets - never commit tokens or keys
+*.pem
+*.key
+*.pfx
+pat.txt
+optoken.txt

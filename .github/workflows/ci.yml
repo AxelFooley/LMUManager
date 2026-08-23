@@ -1,0 +1,139 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore
+        run: dotnet restore
+      - name: Build (Release)
+        run: dotnet build -c Release --no-restore
+
+  unit-tests:
+    name: unit-tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Run unit tests
+        run: dotnet test LMUManager.Tests -c Release --no-build 2>&1 || (dotnet build -c Release && dotnet test LMUManager.Tests -c Release --no-build)
+
+  integration-tests:
+    name: integration-tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Build app
+        run: dotnet build LMUManager.csproj -c Release
+      - name: Self test (config, Steam detection)
+        run: dotnet bin/Release/net8.0-windows/LMUManager.dll --selftest
+      - name: Startup integration test (real registry, isolated entries)
+        run: dotnet bin/Release/net8.0-windows/LMUManager.dll --startuptest
+
+  codeql:
+    name: codeql
+    runs-on: windows-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          queries: security-extended
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Build for analysis
+        run: dotnet build -c Release
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:csharp"
+
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  security-gate:
+    name: security-gate
+    runs-on: windows-latest
+    needs: [codeql, gitleaks]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Block on vulnerable NuGet packages (high/critical)
+        shell: pwsh
+        run: |
+          dotnet restore
+          $report = dotnet list package --vulnerable --include-transitive 2>&1 | Out-String
+          Write-Output $report
+          if ($report -match '\b(Critical|High)\b') {
+            Write-Error "High or Critical vulnerable packages found - blocking merge."
+            exit 1
+          }
+      - name: Block on high/critical CodeQL alerts
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $headers = @{ Authorization = "Bearer $env:GITHUB_TOKEN"; "X-GitHub-Api-Version" = "2022-11-28" }
+          $ref = "refs/pull/${{ github.event.pull_request.number }}/merge"
+          $deadline = (Get-Date).AddMinutes(5)
+          $alerts = @()
+          do {
+            Start-Sleep -Seconds 15
+            try {
+              $alerts = Invoke-RestMethod -Uri "https://api.github.com/repos/${{ github.repository }}/code-scanning/alerts?ref=$ref&state=open" -Headers $headers
+            } catch {
+              Write-Output "Alerts not ready yet, retrying..."
+              continue
+            }
+          } until ($alerts -is [array] -or (Get-Date) -gt $deadline)
+
+          $blocking = @($alerts | Where-Object { $_.rule.security_severity_level -in @('high','critical') })
+          if ($blocking.Count -gt 0) {
+            Write-Output "Blocking CodeQL findings:"
+            $blocking | ForEach-Object { Write-Output ("  [{0}] {1} ({2})" -f $_.rule.security_severity_level, $_.rule.id, $_.most_recent_instance.location.path) }
+            exit 1
+          }
+          Write-Output "No high/critical CodeQL alerts on this PR."
+
+  main-source-guard:
+    name: main-source-guard
+    runs-on: ubuntu-latest
+    if: github.base_ref == 'main'
+    steps:
+      - name: Only 'dev' may merge into 'main'
+        shell: bash
+        run: |
+          if [ "${{ github.head_ref }}" != "dev" ]; then
+            echo "::error::PRs into 'main' must come from the 'dev' branch (got: ${{ github.head_ref }})"
+            exit 1
+          fi
+          echo "Source branch is 'dev' - allowed."
