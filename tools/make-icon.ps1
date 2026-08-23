@@ -29,9 +29,9 @@ function New-IconBitmap([int]$s)
         [System.Drawing.Color]::FromArgb(255, 27, 58, 95), 55)
     $g.FillPath($brush, $path)
 
-    # Le Mans speed stripes, clipped to the tile
+    # Le Mans speed stripes crossing the bottom-right corner, clipped to the tile
     $g.SetClip($path)
-    $g.TranslateTransform($s / 2.0, $s / 2.0)
+    $g.TranslateTransform($s * 0.75, $s * 0.75)
     $g.RotateTransform(-30)
     $span = $s * 2.2
     $stripeW = $s * 0.085
@@ -43,7 +43,7 @@ function New-IconBitmap([int]$s)
     )
     for ($i = 0; $i -lt 3; $i++)
     {
-        $y = $s * 0.16 + $i * ($stripeW + $gap)
+        $y = -$stripeW / 2.0 + $i * ($stripeW + $gap)
         $stripeBrush = New-Object System.Drawing.SolidBrush($colors[$i])
         $g.FillRectangle($stripeBrush, -$span / 2.0, $y, $span, $stripeW)
         $stripeBrush.Dispose()
