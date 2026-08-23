@@ -14,5 +14,6 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versio
 - Windows startup integration: detects companion apps configured to autostart and offers removal; "Start with Windows" toggle for LMU Manager itself
 - System tray presence during sessions with "Stop companion apps" and "Exit" actions
 - Single-instance guard; dark themed WPF UI; portable JSON settings in `%APPDATA%\LMUManager`
+- Custom application icon (multi-resolution, Le Mans racing theme) for the exe, window, taskbar and tray
 - Headless modes for automation: `--selftest`, `--startuptest`, `--sessiontest <config>`
 - CI/CD: parallel build / unit tests / integration tests / CodeQL / Gitleaks / security gate on PRs to `dev` and `main`; blocking on high/critical findings; `main` accepts merges from `dev` only

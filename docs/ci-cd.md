@@ -43,9 +43,11 @@ All jobs run **in parallel** except `security-gate`, which needs the scanners' r
 
 ## Severity policy
 
-- **CodeQL:** high and critical alerts block merging (enforced by `security-gate`; additionally a repository ruleset blocks on code-scanning findings at the same threshold).
+- **CodeQL:** high and critical alerts block merging, enforced by the required `security-gate` check (it queries the code-scanning alerts on the PR merge ref and fails on `high`/`critical`).
 - **Secrets (Gitleaks):** any detected secret blocks - there is no benign secret.
 - **Dependencies:** high/critical vulnerable NuGet packages (including transitive) block merging via `dotnet list package --vulnerable`. Dependabot additionally opens weekly update PRs against `dev`; its dashboard alerts are monitored, but the merge-blocking enforcement lives in CI because the Actions `GITHUB_TOKEN` cannot read the Dependabot alerts API.
+
+> A repository ruleset with a `code_scanning` rule was evaluated and removed: without bypass actors it also declined **direct pushes** to `dev` pending analysis (breaking maintainer workflow), and with bypass actors it added nothing the required `security-gate` check doesn't already enforce. Re-add it with a bypass actor for the owner if push-gating is ever wanted.
 
 ## Branch protection
 

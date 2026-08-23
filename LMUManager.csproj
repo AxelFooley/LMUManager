@@ -14,7 +14,12 @@
     <Product>LMU Manager</Product>
     <Description>One-click launcher for Le Mans Ultimate companion apps. Starts your tools with the game and closes them when you finish.</Description>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="icon.ico" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Remove="LMUManager.Tests\**" />
   </ItemGroup>

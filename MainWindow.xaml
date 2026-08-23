@@ -5,6 +5,7 @@
         Width="780" Height="620"
         MinWidth="700" MinHeight="520"
         WindowStartupLocation="CenterScreen"
+        Icon="icon.ico"
         Background="{StaticResource BgBrush}"
         Closing="Window_Closing">
 
