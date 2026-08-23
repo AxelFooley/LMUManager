@@ -23,10 +23,24 @@ public partial class MainWindow : Window
 
     private readonly Forms.NotifyIcon _trayIcon = new()
     {
-        Icon = System.Drawing.SystemIcons.Application,
+        Icon = LoadTrayIcon(),
         Visible = true,
         Text = "LMU Manager",
     };
+
+    private static System.Drawing.Icon LoadTrayIcon()
+    {
+        try
+        {
+            var source = Application.GetResourceStream(new Uri("pack://application:,,,/icon.ico"));
+            using var multi = new System.Drawing.Icon(source.Stream);
+            return new System.Drawing.Icon(source.Stream, 16, 16);
+        }
+        catch (Exception ex) when (ex is IOException or UriFormatException or ArgumentException)
+        {
+            return System.Drawing.SystemIcons.Application;
+        }
+    }
 
     public MainWindow()
     {
