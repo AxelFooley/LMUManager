@@ -3,6 +3,18 @@
 All notable changes to LMU Manager are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/).
 
+## [1.0.1] - 2026-08-23
+
+### Changed
+- Test dependencies refreshed: Microsoft.NET.Test.Sdk 18.9.0, xunit.runner.visualstudio 4.0.0, coverlet.collector 10.0.1, plus a minor/patch group
+- CI Actions refreshed: actions/checkout v7, actions/setup-dotnet v6, gitleaks-action v3, action-gh-release v3
+- Release notes are generated from this changelog, with an automatic commit-log fallback
+
+### Fixed
+- Release body rendering (multiline markdown) for future releases
+
+No application code changes - LMUManager.exe is functionally identical to v1.0.0.
+
 ## [1.0.0] - 2026-08-23
 
 ### Added

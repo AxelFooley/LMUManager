@@ -12,6 +12,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
@@ -34,13 +36,21 @@ jobs:
         id: changelog
         shell: pwsh
         run: |
-          $tag = "${{ github.ref_name }}".TrimStart('v')
+          $tag = "${{ github.ref_name }}"
           $content = Get-Content CHANGELOG.md -Raw
-          $match = [regex]::Match($content, "(?s)## \[$tag\][^\r\n]*(.*?)(?=\r?\n## |\z)")
+          $match = [regex]::Match($content, "(?s)## \[$($tag.TrimStart('v'))\][^\r\n]*(.*?)(?=\r?\n## |\z)")
           if ($match.Success) {
             $section = $match.Groups[1].Value.Trim()
+            Write-Output "source: CHANGELOG.md"
           } else {
-            $section = "Release ${{ github.ref_name }} - see CHANGELOG.md for details."
+            Write-Output "source: commit log (no CHANGELOG section for $tag)"
+            $prev = git describe --tags --abbrev=0 "$tag^" 2>$null
+            if ($prev) {
+              $log = git log --pretty="format:- %s" "$prev..$tag" | Out-String
+              $section = "### Changes since $prev`n`n" + $log.Trim()
+            } else {
+              $section = "First release - see the project README."
+            }
           }
           "body<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
           $section | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
